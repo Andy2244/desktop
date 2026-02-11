@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright (c) 2025 Private Internet Access, Inc.
+# Copyright (c) 2026 Private Internet Access, Inc.
 #
 # This file is part of the Private Internet Access Desktop Client.
 #
@@ -250,7 +250,7 @@ function installDependencies() {
     elif hash pacman 2>/dev/null; then
         sudo pacman -S --noconfirm libxkbcommon-x11 libnl iptables psmisc libatomic_ops xterm
     elif hash zypper 2>/dev/null; then
-        sudo zypper install -y libxkbcommon-x11-0 iptables psmisc libatomic xterm
+        sudo zypper install -y libxkbcommon-x11-0 iptables psmisc libatomic1 xterm
         # Ensure that libnsl.so.1 is available - required by openvpn.
         # On recent versions of opensuse this is not installed by default.
         # NOTE: this install will fail on systems that already have libnsl.so.1

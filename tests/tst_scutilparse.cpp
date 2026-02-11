@@ -1,4 +1,4 @@
-// Copyright (c) 2025 Private Internet Access, Inc.
+// Copyright (c) 2026 Private Internet Access, Inc.
 //
 // This file is part of the Private Internet Access Desktop Client.
 //
@@ -83,6 +83,22 @@ private slots:
         auto parseResult = scutilParse(scutilText);
 
         QCOMPARE(parseResult, QJsonValue::Undefined);
+    }
+
+    void testEmptyDictionary()
+    {
+        const QString scutilText = "<dictionary> {\n }\n";
+        auto parseResult = scutilParse(scutilText);
+
+        QCOMPARE(parseResult, QJsonObject{});
+    }
+
+    void testEmptyArray()
+    {
+        const QString scutilText = "<array> {\n }\n";
+        auto parseResult = scutilParse(scutilText);
+
+        QCOMPARE(parseResult, QJsonArray{});
     }
 
     void testParserReturnsNullIfDictionaryContainsPIAEmpty()

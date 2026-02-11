@@ -1,4 +1,4 @@
-// Copyright (c) 2025 Private Internet Access, Inc.
+// Copyright (c) 2026 Private Internet Access, Inc.
 //
 // This file is part of the Private Internet Access Desktop Client.
 //
@@ -300,6 +300,11 @@ QJsonValue Parser::dictionary()
 
 void Parser::dictionaryElements(QJsonObject &dict)
 {
+    // Allow empty dictionaries
+    if(_lookahead.type == TokenType::BlockClose)
+    {
+        return;
+    }
     dictionaryElement(dict);
     while(_lookahead.type == TokenType::NewLine)
     {
@@ -333,7 +338,7 @@ QString Parser::dictionaryKey()
     if(_lookahead.type == TokenType::Identifier)
     {
         // Restrict keys to alphabetic characters
-        QRegularExpression regex("^[A-Za-z]+$");
+        QRegularExpression regex("^[A-Za-z_][A-Za-z0-9_]*$");
 
         // Check if the lookahead text matches the regular expression
         QRegularExpressionMatch result = regex.match(_lookahead.text);
@@ -381,6 +386,11 @@ QJsonValue Parser::array()
 
 void Parser::arrayElements(QJsonArray &array)
 {
+    // Allow empty arrays
+    if(_lookahead.type == TokenType::BlockClose)
+    {
+        return;
+    }
     arrayElement(array);
     while(_lookahead.type == TokenType::NewLine)
     {
@@ -481,7 +491,7 @@ QJsonValue scutilParse(const QString &text)
     {
         Lexer lex{text};
         // Temporarily keep tracing at verbose level for chartering and initial release.
-        return Parser{lex}.parseTrace();
+        return Parser{lex}.parse();
     }
     catch(const std::exception &ex)
     {

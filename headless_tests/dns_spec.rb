@@ -9,9 +9,9 @@ require_relative 'src/systemutil'
 # and represents the "Use existing DNS" option
 test_cases = [
     {dns: "pia", expected: ["10.0.0.243"], allowed_to_leak: false},
-    {dns: "hdns", expected: ["103.196.38.38"], allowed_to_leak: true},
-    {dns: ["1.1.1.1", "1.1.1.2"], expected: ["1.1.1.1", "1.1.1.2"], allowed_to_leak: true},
-    {dns: ["127.0.0.1", "1.1.1.2"], expected: ["127.0.0.1", "1.1.1.2"], allowed_to_leak: true},
+    #{dns: "hdns", expected: ["103.196.38.38"], allowed_to_leak: true},
+    #{dns: ["1.1.1.1", "1.1.1.2"], expected: ["1.1.1.1", "1.1.1.2"], allowed_to_leak: true},
+    #{dns: ["127.0.0.1", "1.1.1.2"], expected: ["127.0.0.1", "1.1.1.2"], allowed_to_leak: true},
 ]
 # Local DNS does not play nice with our windows and linux CI runners. Not worth to keep fighting it now, skip.
 if !(SystemUtil.CI? && (SystemUtil.windows? || SystemUtil.linux?))

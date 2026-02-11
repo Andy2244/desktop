@@ -7,7 +7,7 @@ require_relative 'retry'
 
 class DNSLeakChecker
     # The leak tests work by first pinging the domain with a specific id and then
-    # querying the API by the same id. 
+    # querying the API by the same id.
     # The id is a random number and could potentially clash with another user of the API.
     def self.dns_leaks?
         session_id = SecureRandom.hex(20)
@@ -36,7 +36,7 @@ class DNSLeakChecker
         # Get information about the current IP address
         out = Retriable.run(attempts: 2, delay: 2) {
             o, e, s = Open3.capture3("curl https://dnsleaktest.org/api/ip --connect-timeout 10")
-            raise if st != 0
+            raise if s != 0
 	        out
         }
         ip_info = JSON.parse(out).slice("cc", "asnOrg", "isp", "cityName")
@@ -50,7 +50,7 @@ class DNSLeakChecker
 
     def self.check_requests(test_path, check_path)
         # Send all requests in parallel, as they will all fail and timeout
-        10.times.map { |i| Thread.new { system("curl #{i+1}.#{test_path}", out: File::NULL, err: File::NULL) } }.each(&:join) 
+        10.times.map { |i| Thread.new { system("curl #{i+1}.#{test_path}", out: File::NULL, err: File::NULL) } }.each(&:join)
         output, err_out, status = Retriable.run(attempts: 2, delay: 2) {
             o, e, s = Open3.capture3("curl #{check_path} --connect-timeout 10")
             raise if ((o.include? '"retcode":-100') || (o.include? 'error'))

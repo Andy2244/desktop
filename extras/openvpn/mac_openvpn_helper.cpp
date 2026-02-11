@@ -1,4 +1,4 @@
-// Copyright (c) 2025 Private Internet Access, Inc.
+// Copyright (c) 2026 Private Internet Access, Inc.
 //
 // This file is part of the Private Internet Access Desktop Client.
 //
@@ -106,6 +106,9 @@ QByteArray scutil(const QStringList& commands, ProcessErrorBehavior errorBehavio
 QJsonObject scutilGet(const QString& path, bool* present = nullptr)
 {
     QString data = QString(scutil({ QStringLiteral("open"), QStringLiteral("show %1").arg(path), QStringLiteral("quit") }, IgnoreErrors));
+    qInfo() << "Inside scutilGet, formatting" << path;
+    qInfo() << "Data is" << data;
+
     QJsonValue value = scutilParse(data);
     if (present)
         *present = value.isObject();
@@ -297,6 +300,8 @@ void restoreConfiguration()
         // exists, that commonly happens when a network interface is
         // disconnected while connected to PIA.
         bool destExists;
+        qInfo() << "Restore:"
+            << "trying to restore" << savedKey << "to" << destKey;
         QJsonObject destValue = scutilGet(destKey, &destExists);
         // We can restore the backup over this value if it still exists and is still
         // set to the configuration applied by PIA
@@ -305,6 +310,7 @@ void restoreConfiguration()
             // If we backed up a value (and it's not PIAEmpty), restore it.
             if (scutilExists(savedKey))
             {
+                qInfo() << "should be successfully restoring" << savedKey << "to" << destKey;
                 commands << QStringLiteral("get %1").arg(savedKey);
                 commands << QStringLiteral("set %1").arg(destKey);
             }
@@ -466,6 +472,7 @@ int main(int argc, char* argv[])
     {
         if (scriptType == QLatin1String("up"))
         {
+            qInfo() << "Inside script_type == up path";
             QStringList dnsServers;
             QStringList winsServers;
             QString domain;
@@ -540,6 +547,7 @@ int main(int argc, char* argv[])
         }
         else if (scriptType == QLatin1String("down"))
         {
+            qInfo() << "Inside script_type == down path";
             // Remove the saved setup parameters
             scutil({
                 QStringLiteral("remove State:/Network/PrivateInternetAccess/SetupParams"),
@@ -548,6 +556,7 @@ int main(int argc, char* argv[])
         }
         else if (scriptType == QLatin1String("watch-notify"))
         {
+            qInfo() << "Inside script_type == watch-notify path";
             configurationChanged();
         }
     }

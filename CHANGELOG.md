@@ -1,4 +1,8 @@
 # Changelog
+### v3.7.0
+* macOS: Fix a macOS26 related issue where DNS was not always restored on disconnecting from the VPN
+* Windows/Linux: Turn off split DNS by default (it can be enabled in settings)
+* Linux: Fix zypper dependencies (libatomic)
 ### v3.6.2
 * Windows: Updated tap-windows6 driver with latest security patches
 * Linux: Prevent local unauthorized users from disconnecting or altering VPN settings

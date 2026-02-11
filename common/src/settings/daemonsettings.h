@@ -1,4 +1,4 @@
-// Copyright (c) 2025 Private Internet Access, Inc.
+// Copyright (c) 2026 Private Internet Access, Inc.
 //
 // This file is part of the Private Internet Access Desktop Client.
 //
@@ -165,8 +165,9 @@ public:
 
     // Whether split tunnel is enabled
     JsonField(bool, splitTunnelEnabled, false)
-    // Whether to also split DNS traffic
-    JsonField(bool, splitTunnelDNS, true)
+    // Whether to also split DNS traffic - set to false by default, as it can be a little
+    // temperamental on some platforms
+    JsonField(bool, splitTunnelDNS, false)
     // Rules for excluding/including apps from VPN
     JsonField(QVector<SplitTunnelRule>, splitTunnelRules, {})
 
