@@ -606,15 +606,15 @@ unsigned WireguardMethod::findMaxMtu(const QHostAddress &host)
 // Disable protocol bindings that serve no purpose on a VPN tunnel adapter.
 // Windows inherits all default components when a new adapter is created; only
 // ms_tcpip (IPv4) is needed for tunnel operation. ms_server (SMB) is the most
-// critical to remove — it silently exposes local file shares to the VPN
+// critical to remove -- it silently exposes local file shares to the VPN
 // server's subnet. COM must already be initialized on the calling thread
 // (the daemon main thread does this at startup).
 static void hardenAdapterBindings(quint64 luidValue)
 {
     static const LPCWSTR kDisable[] = {
-        L"ms_server",   // File and Printer Sharing (SMB) — exposes shares to VPN subnet
+        L"ms_server",   // File and Printer Sharing (SMB) -- exposes shares to VPN subnet
         L"ms_msclient", // Client for Microsoft Networks
-        L"ms_tcpip6",   // IPv6 — PIA WireGuard tunnel is IPv4 only
+        L"ms_tcpip6",   // IPv6 -- PIA WireGuard tunnel is IPv4 only
         L"ms_lldp",     // Link-Layer Discovery Protocol
         L"ms_lltdio",   // Link Layer Topology Discovery I/O
         L"ms_rspndr",   // Link Layer Topology Discovery Responder
@@ -652,14 +652,17 @@ static void hardenAdapterBindings(quint64 luidValue)
 
     LPWSTR pLockedBy = nullptr;
     hr = pLock->AcquireWriteLock(5000, L"PIA Daemon", &pLockedBy);
-    CoTaskMemFree(pLockedBy);
-    if(FAILED(hr))
+    // AcquireWriteLock returns S_FALSE (not a FAILED hr) if it times out -- anything but S_OK means no lock
+    if(hr != S_OK)
     {
-        qWarning() << "hardenAdapterBindings: could not acquire write lock" << "0x" << QString::number(hr, 16);
+        qWarning() << "hardenAdapterBindings: could not acquire write lock" << "0x" << QString::number(hr, 16)
+            << "- held by" << (pLockedBy ? QString::fromWCharArray(pLockedBy) : QStringLiteral("(unknown)"));
+        CoTaskMemFree(pLockedBy);
         pLock->Release();
         pNetCfg->Release();
         return;
     }
+    CoTaskMemFree(pLockedBy);
 
     hr = pNetCfg->Initialize(nullptr);
     if(FAILED(hr))
@@ -706,6 +709,7 @@ static void hardenAdapterBindings(quint64 luidValue)
 
     // Enumerate binding paths above the adapter; disable any that are in kDisable
     bool changed = false;
+    bool inspectionFailed = false;
     INetCfgComponentBindings *pAdapterBindings = nullptr;
     if(SUCCEEDED(pAdapter->QueryInterface(IID_INetCfgComponentBindings,
                                          reinterpret_cast<void**>(&pAdapterBindings))))
@@ -713,7 +717,10 @@ static void hardenAdapterBindings(quint64 luidValue)
         IEnumNetCfgBindingPath *pPathEnum = nullptr;
         hr = pAdapterBindings->EnumBindingPaths(EBP_ABOVE, &pPathEnum);
         if(FAILED(hr))
+        {
             qWarning() << "hardenAdapterBindings: EnumBindingPaths failed" << "0x" << QString::number(hr, 16);
+            inspectionFailed = true;
+        }
         else
         {
             INetCfgBindingPath *pPath = nullptr;
@@ -744,6 +751,12 @@ static void hardenAdapterBindings(quint64 luidValue)
                                                 << QString::fromWCharArray(pId);
                                             changed = true;
                                         }
+                                        else
+                                        {
+                                            qWarning() << "hardenAdapterBindings: Enable(FALSE) failed for"
+                                                << QString::fromWCharArray(pId);
+                                            inspectionFailed = true;
+                                        }
                                         break;
                                     }
                                 }
@@ -761,6 +774,11 @@ static void hardenAdapterBindings(quint64 luidValue)
         }
         pAdapterBindings->Release();
     }
+    else
+    {
+        qWarning() << "hardenAdapterBindings: QI INetCfgComponentBindings failed";
+        inspectionFailed = true;
+    }
     pAdapter->Release();
 
     if(changed)
@@ -776,6 +794,10 @@ static void hardenAdapterBindings(quint64 luidValue)
         }
         else
             qInfo() << "Adapter bindings hardened";
+    }
+    else if(inspectionFailed)
+    {
+        qWarning() << "hardenAdapterBindings: inspection incomplete, bindings may not be fully hardened";
     }
     else
     {
